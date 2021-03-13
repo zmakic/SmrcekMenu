@@ -15,3 +15,22 @@ require("channels")
 //
 // const images = require.context('../images', true)
 // const imagePath = (name) => images(name, true)
+
+// TODO - import Vue from 'vue' - should be this, and esm for dev only
+import { createApp } from 'vue';
+import SmrcekMenuApp from '../components/SmrcekMenuApp.vue'
+
+const appTag = 'smrcek-menu-app';
+
+document.addEventListener('turbolinks:load', () => {
+  const appElements = document.getElementsByTagName(appTag);
+  if (appElements && appElements.length === 1) {
+    const appElement = appElements[0];
+    const app = createApp(SmrcekMenuApp, {
+      ...appElement.dataset
+    });
+    app.mount(appTag);
+
+    console.log('APP STARTED');
+  }
+});
