@@ -1,3 +1,8 @@
-<%= link_to("Goto start", root_path, data: { :confirm => 'Are you sure?'}) %>
-
-<smrcek-menu-app data-title="Smrcek Menu" />
+<% content_for :head_vue_app do %>
+   <%= javascript_pack_tag 'smrcek-menu-app', 'data-turbolinks-track': 'reload' %>
+ <% end %>
+<smrcek-menu-app
+  data-title="<%= t('smrcek_app.title') %>"
+  data-logo-path="<%=asset_path('smrcek-logo.png') %>"
+  data-root-path="<%=root_path %>"
+  />

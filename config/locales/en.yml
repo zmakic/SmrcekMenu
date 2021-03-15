@@ -30,4 +30,8 @@
 # available at https://guides.rubyonrails.org/i18n.html.
 
 en:
-  hello: "Hello world"
+  landing:
+    welcome_message: "Welcome to all of the apps"
+    open_app: "Open app: '%{app_name}'"
+  smrcek_app:
+    title: "Smrček Menu"

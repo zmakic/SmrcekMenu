@@ -5,18 +5,57 @@
     "@rails/actioncable": "^6.0.0",
     "@rails/activestorage": "^6.0.0",
     "@rails/ujs": "^6.0.0",
-    "@rails/webpacker": "4.3.0",
+    "@types/jasmine": "^3.6.6",
+    "axios": "^0.21.1",
+    "bootstrap": "^4.6.0",
+    "bootstrap-vue": "^2.21.2",
+    "firebase": "^8.2.10",
+    "jasmine": "^3.6.4",
+    "lodash": "^4.17.11",
     "turbolinks": "^5.2.0",
-    "vue": "^3.0.7",
-    "vue-loader": "^16.1.2",
-    "vue-template-compiler": "^2.6.12"
+    "vue": "^2.6.12",
+    "vuex": "^3.6.2"
   },
   "scripts": {
-    "start:dev": "webpack-dev-server"
+    "start:dev": "webpack-dev-server",
+    "test": "jest"
   },
   "version": "0.1.0",
   "devDependencies": {
-    "webpack-dev-server": "^3.11.2",
-    "@vue/compiler-sfc": "^3.0.7"
+    "@rails/webpacker": "4.3.0",
+    "@types/jest": "^26.0.20",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^14.14.34",
+    "jasmine-spec-reporter": "^6.0.0",
+    "jasmine-ts": "^0.3.0",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.3",
+    "ts-loader": "^8.0.18",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3",
+    "vue-loader": "^15.9.6",
+    "vue-template-compiler": "^2.6.12",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./setup-jest.ts"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest",
+      "^.+\\.ts?$": "ts-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!variables/.*)"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }
