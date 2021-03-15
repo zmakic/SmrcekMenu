@@ -2,7 +2,9 @@ Rails.application.routes.draw do
   root to: 'landing#index'
 
   resources :users do
-    resources :recipes
+    resources :recipes do
+      resources :recipe_contents
+    end
     resources :ingredients
   end
   # mount JasmineRails::Engine => '/specs' if defined?(JasmineRails) TODO - see what with jasmine
