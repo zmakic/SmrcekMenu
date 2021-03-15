@@ -1,11 +1,11 @@
-import { AppState } from 'smrcek-menu-app/models/app-state';
+import { AppState } from '../models/app-state';
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { LoggedInUserModule } from './modules/logged-in-user.module';
 import axios from "axios";
-import {LoginStateEnum} from "smrcek-menu-app/models/login/login-state-enum";
-import {RecipeDto} from "smrcek-menu-app/models/backend/recipe-dto";
-import {IngredientDto} from "smrcek-menu-app/models/backend/ingredient-dto";
+import {LoginStateEnum} from "../models/login/login-state-enum";
+import {RecipeDto} from "../models/backend/recipe-dto";
+import {IngredientDto} from "../models/backend/ingredient-dto";
 import _ from 'lodash'; // TODO - try to create funciton from here in mylodash
 
 const API_URL = "http://localhost:3000"; // TODO - put in config
@@ -28,11 +28,20 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
       state.appLoaded = true;
     },
     addNewRecipe(state, newRecipe: RecipeDto) {
+      newRecipe.creation_id = _.uniqueId('recipe');
       state.recipesList.push(newRecipe);
     },
-    updateNewRecipe(state, { recipeToUpdate, updatedRecipe }) {
-      const foundRecipeIndex = _.findIndex(state.recipesList, recipe => recipe === recipeToUpdate);
+    updateExistingRecipe(state, { recipeToUpdateId, updatedRecipe }) {
+      const foundRecipeIndex = _.findIndex(state.recipesList, recipe => recipe.id === recipeToUpdateId);
       if (foundRecipeIndex >= 0) {
+        Vue.set(state.recipesList, foundRecipeIndex, updatedRecipe);
+      }
+    },
+    updateNewRecipe(state, { recipeToUpdateCreationId, updatedRecipe }) {
+      const foundRecipeIndex = _.findIndex(state.recipesList,
+              recipe => recipe.creation_id === recipeToUpdateCreationId);
+      if (foundRecipeIndex >= 0) {
+        updatedRecipe.creation_id = recipeToUpdateCreationId;
         Vue.set(state.recipesList, foundRecipeIndex, updatedRecipe);
       }
     },
@@ -45,9 +54,13 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
     updateRecipesList(state, newList: RecipeDto[]) {
       Vue.set(state, 'recipesList', newList);
     },
+
+
     updateIngredientsList(state, newList: IngredientDto[]) {
       Vue.set(state, 'ingredientsList', newList);
     },
+
+
     clearData(state) {
       Vue.set(state, 'recipesList', []);
       Vue.set(state, 'ingredientsList', []);
@@ -58,14 +71,24 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
     clearData( { commit }) {
       commit("clearData");
     },
+
+    // TODO - access backend non-stop - add after return to list of ingredients.
+    // Try ingredients from server and recipes more responsive
+    deleteIngredient({commit, state}, recipe: IngredientDto): Promise<IngredientDto> {
+      const userId = (state as any).LoggedInUserModule.userId;
+      return axios.delete<IngredientDto>(API_URL+ "/users/" + userId + '/ingredients/' + recipe.id + '.json').then(
+          response => {
+            this.dispatch('loadIngredients');
+            return response.data;
+          }
+      );
+      // TODo - check what exactly deltee returns ??
+    },
     loadIngredients({commit, state}): Promise<IngredientDto[]> {
       const userId = (state as any).LoggedInUserModule.userId;
       if (userId) {
         return axios.get<IngredientDto[]>(API_URL + "/users/" + userId + '/ingredients.json').then(response => {
           commit("updateIngredientsList", response.data);
-
-
-
           return response.data;
         });
       } else {
@@ -74,17 +97,31 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
     },
     createNewIngredient({commit, state}, ingredient: IngredientDto): Promise<IngredientDto> {
       const userId = (state as any).LoggedInUserModule.userId;
-      return axios.post<IngredientDto>(API_URL+"/users/" + userId + '/recipes.json', { ingredient: ingredient }).then(
+      return axios.post<IngredientDto>(API_URL+"/users/" + userId + '/ingredients.json', { ingredient: ingredient }).then(
           response => {
             this.dispatch('loadIngredients');
             return response.data;
           }
       );
     },
+    updateIngredient({commit, state}, ingredient: IngredientDto): Promise<IngredientDto> {
+      const userId = (state as any).LoggedInUserModule.userId;
+      return axios.put<IngredientDto>(API_URL+"/users/" + userId + '/ingredients/' + ingredient.id + '.json', { ingredient: ingredient }).then(
+          response => {
+            this.dispatch('loadIngredients');
+            return response.data;
+          }
+      );
+    },
+
+    // TODO - not access backend non-stop. DO not refresh whole list!
+    // Try recipes more responsive and ingredients from server
     deleteRecipe({commit, state}, recipe: RecipeDto): Promise<RecipeDto> {
       const userId = (state as any).LoggedInUserModule.userId;
-      axios.delete<IngredientDto>(API_URL+ "/users/" + userId + '/recipes/' + recipe.id + '.json').then(
+      axios.delete<RecipeDto>(API_URL+ "/users/" + userId + '/recipes/' + recipe.id + '.json').then(
+          // TODO - config recipe deteled
       );
+      // TODo - check what exactly deltee returns ??
 
       return new Promise<RecipeDto>(resolve => {
         this.commit('removeRecipe', recipe);
@@ -105,14 +142,12 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
     },
     createNewRecipe({commit, state}, recipe: RecipeDto): Promise<RecipeDto> {
       const userId = (state as any).LoggedInUserModule.userId;
-      // TODO - or to not access backend non-stop - add here to the list of recipes!
-      // Try recipes like this and ingredients from server
       axios.post<RecipeDto>(API_URL+"/users/" + userId + '/recipes.json', { recipe: recipe })
         .then(response => {
           // TODO - for checking how it updates UI
           setTimeout(() => {
             commit("updateNewRecipe", {
-              recipeToUpdate: recipe,
+              recipeToUpdateCreationId: recipe.creation_id,
               updatedRecipe: response.data
             });
           }, 2000);
@@ -129,14 +164,35 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
         this.commit('addNewRecipe', recipe);
         resolve(recipe);
       });
+    },
 
-      // TODO - or refresh fom server always.
-      // return axios.post<RecipeDto>(API_URL+"/users/" + userId + '/recipes.json', { recipe: recipe }).then(
-      //     response => {
-      //       this.dispatch('loadRecipes');
-      //       return response.data;
-      //     }
-      // );
+    updateRecipe({commit, state}, recipe: RecipeDto): Promise<RecipeDto> {
+      const userId = (state as any).LoggedInUserModule.userId;
+      axios.put<RecipeDto>(API_URL + "/users/" + userId + '/recipes/' + recipe.id + '.json', {recipe: recipe})
+          .then(response => {
+            // TODO - for checking how it updates UI
+            setTimeout(() => {
+              commit("updateExistingRecipe", {
+                recipeToUpdateId: recipe.id,
+                updatedRecipe: response.data
+              });
+            }, 2000);
+
+            return response.data;
+          })
+          .catch(error => {
+            console.log('update error', error);
+            // TODO - restore old data
+            throw error;
+          });
+
+      return new Promise<RecipeDto>(resolve => {
+        this.commit('updateExistingRecipe', {
+          recipeToUpdateId: recipe.id,
+          updatedRecipe: recipe
+        });
+        resolve(recipe);
+      });
     }
   }
 });

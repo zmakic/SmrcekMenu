@@ -49,11 +49,9 @@ export default {
   mounted() {
   },
   updated() {
-    console.log('dom-updated modal' );
     document.querySelector("body")?.classList.add("overflow-hidden");
   },
   beforeUnmount() {
-    console.log('unmounting modal');
     document.querySelector("body")?.classList.remove("overflow-hidden");
   },
   methods: {

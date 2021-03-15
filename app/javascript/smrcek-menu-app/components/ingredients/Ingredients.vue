@@ -1,30 +1,39 @@
 <template>
   <div>
-    <b-button variant="primary" @click="openRecipeForm()">
-      CREATE NEW RECIPE
+    <b-button variant="primary" @click="openNewIngredientForm()">
+      CREATE NEW INGREDIENT
     </b-button>
-    <NewRecipe
-        :modalShown="recipeModalShown"
-        @confirm-modal="createNewRecipe($event)"
-        @close-modal="recipeModalShown=false"/>
+    <IngredientForm
+        :modalShown="newIngredientModalShown"
+        @confirm-modal="createNewIngredient($event)"
+        @close-modal="newIngredientModalShown=false"/>
+    <IngredientForm
+        :modalShown="editIngredientModalShown"
+        :initialIngredient="selectedIngredient"
+        @confirm-modal="updateIngredient($event)"
+        @close-modal="editIngredientModalShown=false"/>
     <div class="recipes-container">
       <b-list-group>
         <b-list-group-item
             class="recipe-name"
-            v-for="recipe in recipesList" :key="recipe.id"
-            @click="selectedRecipe=recipe"
-            :active="selectedRecipe===recipe">
+            v-for="ingredient in ingredientsList" :key="ingredient.id"
+            @click="setSelectedIngredient(ingredient)"
+            :active="selectedIngredient===ingredient">
           <b-button variant="danger" size="sm"
-                    @click.stop="deleteRecipe(recipe)" class="float-right ml-2"
-                    :disabled="!recipe.id">
+                    @click.stop="deleteIngredient(ingredient)" class="float-right ml-2"
+                    :disabled="!ingredient.id">
             X
           </b-button>
-          {{ recipe.name }}
+          {{ ingredient.name }}
         </b-list-group-item>
       </b-list-group>
       <div class="recipe-details">
-        <div v-if="!!selectedRecipe">
-          <h2>{{selectedRecipe.name}}</h2>
+        <div v-if="!!selectedIngredient">
+          <h2>{{ selectedIngredient.name }}</h2>
+          <b-button @click="openEditIngredientForm()"
+                    :disabled="!selectedIngredient.id">
+            Edit
+          </b-button>
         </div>
       </div>
     </div>
@@ -32,41 +41,62 @@
 </template>
 
 <script lang="ts">
-import NewRecipe from "smrcek-menu-app/components/recipes/NewRecipe.vue";
-import {RecipeDto} from "smrcek-menu-app/models/backend/recipe-dto";
+
+import IngredientForm from "./IngredientForm.vue";
+import {IngredientDto} from "smrcek-menu-app/models/backend/ingredient-dto";
+import * as _ from "lodash";
 export default {
-  name: "Recipes",
   components: {
-    NewRecipe
+    IngredientForm
   },
   props: {
-    recipesList: Array
+    ingredientsList: Array
   },
   emits: {
   },
   data() {
     return {
-      recipeModalShown: false,
-      selectedRecipe: undefined
+      newIngredientModalShown: false,
+      editIngredientModalShown: false,
+      internalSelectedIngredient: undefined
+    }
+  },
+  computed: {
+    selectedIngredient() {
+      if (!this.internalSelectedIngredient) {
+        return undefined;
+      }
+
+      return _.find(this.ingredientsList, ingredient => {
+        return ingredient === this.internalSelectedIngredient ||
+            (ingredient.id === this.internalSelectedIngredient.id) ||
+            (ingredient.creation_id && this.internalSelectedIngredient.creation_id && ingredient.creation_id === this.internalSelectedIngredient.creation_id);
+      });
     }
   },
   mounted() {
   },
   methods: {
-    openRecipeForm() {
-      this.recipeModalShown = true;
+    setSelectedIngredient(ingredient: IngredientDto) {
+      this.internalSelectedIngredient = ingredient;
     },
-    deleteRecipe(recipe: RecipeDto) {
-      this.$store.dispatch('deleteRecipe', recipe).then(() => {
-        if (this.selectedRecipe && recipe && recipe.id === this.selectedRecipe.id) {
-          this.selectedRecipe = undefined;
-        }
+    openNewIngredientForm() {
+      this.newIngredientModalShown = true;
+    },
+    openEditIngredientForm() {
+      this.editIngredientModalShown = true;
+    },
+    deleteIngredient(ingredient: IngredientDto) {
+      this.$store.dispatch('deleteIngredient', ingredient).then(() => {});
+    },
+    createNewIngredient(newIngredient: IngredientDto) {
+      this.$store.dispatch('createNewIngredient', newIngredient).then(response => {
+        this.newIngredientModalShown = false;
       });
     },
-    createNewRecipe(newRecipe: RecipeDto) {
-      console.log('new recipe', newRecipe);
-      this.$store.dispatch('createNewRecipe', newRecipe).then(response => {
-        this.recipeModalShown = false;
+    updateIngredient(ingredient: IngredientDto) {
+      this.$store.dispatch('updateIngredient', ingredient).then(response => {
+        this.editIngredientModalShown = false;
       });
     }
   },

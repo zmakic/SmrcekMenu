@@ -31,7 +31,7 @@
 <script lang="ts">
 
 import Modal from "../modals/Modal";
-import {LoginTypeEnum} from "smrcek-menu-app/models/login/login-type-enum";
+import {LoginTypeEnum} from "../../models/login/login-type-enum";
 
 export default {
   name: "MergeWithMailForm",

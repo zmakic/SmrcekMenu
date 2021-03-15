@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   resources :users do
     resources :recipes
+    resources :ingredients
   end
   # mount JasmineRails::Engine => '/specs' if defined?(JasmineRails) TODO - see what with jasmine
 

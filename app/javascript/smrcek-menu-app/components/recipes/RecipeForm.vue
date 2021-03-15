@@ -4,20 +4,30 @@
       @hide="closeModal($event)"
       @close="closeModal($event)">
     <template #modal-title>
-      New recipe
+      <span v-if="!!initialRecipe">
+        Edit recipe
+      </span>
+      <span v-if="!initialRecipe">
+        New recipe
+      </span>
     </template>
 
     <template #default>
       Name:
       <input
-          v-model="name"
+          v-model="recipe.name"
           type="text"
       >
     </template>
 
     <template #modal-footer="{ ok, cancel, hide }">
       <b-button variant="primary" @click="confirmModal()" left>
-        Create
+        <span v-if="!!initialRecipe">
+          Update
+        </span>
+        <span v-if="!initialRecipe">
+          Create
+        </span>
       </b-button>
       <b-button @click="closeModal()">
         Cancel
@@ -29,12 +39,11 @@
 
 <script lang="ts">
 
-import {RecipeDto} from "smrcek-menu-app/models/backend/recipe-dto";
-
 export default {
   components: {},
   props: {
-    modalShown: Boolean
+    modalShown: Boolean,
+    initialRecipe: Object
   },
   emits: {
     'close-modal': null,
@@ -42,17 +51,18 @@ export default {
   },
   data() {
     return {
-      name: undefined
-    } as RecipeDto
+      recipe: Object.assign({}, this.initialRecipe ) // Guard against undefined object and having to check for them. Also copy data.
+    }
   },
   watch: {
     modalShown(newVal, oldVal) { // TODO - mixin ?
       if (newVal === true && newVal !== oldVal) {
+        this.recipe = Object.assign({}, this.initialRecipe );
         this.$refs.modal.show();
       } else if (newVal === false && newVal !== oldVal) {
         this.$refs.modal.hide();
         // Clear data also when closing
-        this.name = undefined;
+        this.recipe = {};
       }
     }
   },
@@ -64,9 +74,7 @@ export default {
     },
 
     confirmModal() {
-      this.$emit('confirm-modal', {
-        name: this.name
-      } as RecipeDto);
+      this.$emit('confirm-modal', this.recipe);
     },
   },
 };

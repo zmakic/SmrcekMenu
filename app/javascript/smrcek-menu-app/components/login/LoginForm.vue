@@ -47,7 +47,7 @@
 
 <script lang="ts">
 
-import {LoginTypeEnum} from "smrcek-menu-app/models/login/login-type-enum";
+import {LoginTypeEnum} from "../../models/login/login-type-enum";
 
 export default {
   components: {},

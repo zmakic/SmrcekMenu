@@ -4,20 +4,30 @@
       @hide="closeModal($event)"
       @close="closeModal($event)">
     <template #modal-title>
-      New recipe
+      <span v-if="!!initialIngredient">
+        Edit ingredient
+      </span>
+      <span v-if="!initialIngredient">
+        New ingredient
+      </span>
     </template>
 
     <template #default>
       Name:
       <input
-          v-model="name"
+          v-model="ingredient.name"
           type="text"
       >
     </template>
 
     <template #modal-footer="{ ok, cancel, hide }">
       <b-button variant="primary" @click="confirmModal()" left>
-        Create
+        <span v-if="!!initialIngredient">
+          Update
+        </span>
+        <span v-if="!initialIngredient">
+          Create
+        </span>
       </b-button>
       <b-button @click="closeModal()">
         Cancel
@@ -29,12 +39,13 @@
 
 <script lang="ts">
 
-import {RecipeDto} from "smrcek-menu-app/models/backend/recipe-dto";
+import {IngredientDto} from "smrcek-menu-app/models/backend/ingredient-dto";
 
 export default {
   components: {},
   props: {
-    modalShown: Boolean
+    modalShown: Boolean,
+    initialIngredient: Object
   },
   emits: {
     'close-modal': null,
@@ -42,12 +53,13 @@ export default {
   },
   data() {
     return {
-      name: undefined
-    } as RecipeDto
+      ingredient: Object.assign({}, this.initialRecipe ) // Guard against undefined object and having to check for them. Also copy data.
+    }
   },
   watch: {
     modalShown(newVal, oldVal) { // TODO - mixin ?
       if (newVal === true && newVal !== oldVal) {
+        this.ingredient = Object.assign({}, this.initialIngredient );
         this.$refs.modal.show();
       } else if (newVal === false && newVal !== oldVal) {
         this.$refs.modal.hide();
@@ -64,9 +76,7 @@ export default {
     },
 
     confirmModal() {
-      this.$emit('confirm-modal', {
-        name: this.name
-      } as RecipeDto);
+      this.$emit('confirm-modal', this.ingredient);
     },
   },
 };
