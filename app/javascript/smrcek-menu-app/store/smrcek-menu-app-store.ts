@@ -193,6 +193,13 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
         });
         resolve(recipe);
       });
+    },
+
+    deleteRecipeContent({ commit, state }, recipeContent) {
+      const userId = (state as any).LoggedInUserModule.userId;
+      axios.delete(API_URL + "/users/" + userId + '/recipes/' + recipeContent.recipe_id + '/recipe_contents/' + recipeContent.id + '.json')
+          .then();
+      // TODO - need other call for all to work
     }
   }
 });

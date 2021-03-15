@@ -34,6 +34,20 @@
                     :disabled="!selectedRecipe.id">
             Edit
           </b-button>
+          <b-list-group>
+            <b-list-group-item
+                v-for="recipeContent in selectedRecipeContents" :key="recipeContent.id"
+            >
+              <span>
+                {{ recipeContent.name }} ({{ recipeContent.amount }})
+              </span>
+              <b-button variant="danger" size="sm"
+                        @click.stop="deleteRecipeContent(recipeContent)" class="float-right ml-2"
+                        :disabled="!recipeContent.id">
+                X
+              </b-button>
+            </b-list-group-item>
+          </b-list-group>
         </div>
       </div>
     </div>
@@ -44,12 +58,14 @@
 import RecipeForm from "./RecipeForm.vue";
 import {RecipeDto} from "../../models/backend/recipe-dto";
 import * as _ from "lodash";
+import axios from "axios";
 export default {
   components: {
     RecipeForm
   },
   props: {
-    recipesList: Array
+    recipesList: Array,
+    ingredientsList: Array
   },
   emits: {
   },
@@ -57,10 +73,22 @@ export default {
     return {
       newRecipeModalShown: false,
       editRecipeModalShown: false,
-      internalSelectedRecipe: undefined
+      internalSelectedRecipe: undefined,
+
+      recipeContents: [] // TODO - move to store, maybe
     }
   },
   computed: {
+    selectedRecipeContents() {
+      return _.map(_.filter(this.recipeContents, content => content.recipe_id == this.internalSelectedRecipe.id), recipeContent => {
+        const ingredient = _.find(this.ingredientsList, ing => ing.id === recipeContent.ingredient_id);
+        if (ingredient) {
+          recipeContent.name = ingredient.name; // TODO - is ok to mutate here ??? probably not, find a nicer solution
+        }
+
+        return recipeContent;
+      });
+    },
     selectedRecipe() {
       if (!this.internalSelectedRecipe) {
         return undefined;
@@ -78,6 +106,15 @@ export default {
   methods: {
     setSelectedRecipe(recipe: RecipeDto) {
       this.internalSelectedRecipe = recipe;
+
+      // TODO - just hacked here for now. should move to store! but be careful about overlappinh ajax calls
+      axios.get("http://localhost:3000/users/" + 1 + '/recipes/' + recipe.id + '/recipe_contents.json').then(response => {
+        console.log('contents for recipe', recipe, response);
+
+        this.recipeContents = response.data;
+
+        console.log('content set', this.recipeContents);
+      });
     },
     openNewRecipeForm() {
       this.newRecipeModalShown = true;
@@ -95,6 +132,11 @@ export default {
     },
     updateRecipe(recipe: RecipeDto) {
       this.$store.dispatch('updateRecipe', recipe).then(response => {
+        this.editRecipeModalShown = false;
+      });
+    },
+    deleteRecipeContent(recipeContent) {
+      this.$store.dispatch('deleteRecipeContent', recipeContent).then(response => {
         this.editRecipeModalShown = false;
       });
     }

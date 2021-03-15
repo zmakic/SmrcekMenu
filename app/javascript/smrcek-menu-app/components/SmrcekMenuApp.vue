@@ -59,7 +59,8 @@
           </Ingredients>
           <Recipes
               v-if="currentView === CurrentViewEnum.RECIPES"
-              :recipesList="recipesList">
+              :recipesList="recipesList"
+              :ingredientsList="ingredientsList">
           </Recipes>
         </div>
       </div>
@@ -127,6 +128,7 @@ export default {
     showRecipes() {
       this.currentView = CurrentViewEnum.RECIPES;
       this.$store.dispatch("loadRecipes" ).then(recipes => {});
+      this.$store.dispatch("loadIngredients").then(ingredients =>{});
     },
     showIngredients() {
       this.currentView = CurrentViewEnum.INGREDIENTS;

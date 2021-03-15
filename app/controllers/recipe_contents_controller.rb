@@ -20,7 +20,16 @@ class RecipeContentsController < ApplicationController
   end
 
   def show
-    @recipe_content = RecipeContent.find_by_user_id_and_recipe_id(@user.id, params[:recipe_id])
+    @recipe_content = RecipeContent.from_user_id(@user.id).where(recipe_id: @recipe.id).find_by_id(params[:id])
+  end
+
+  def destroy
+    @recipe_content = RecipeContent.from_user_id(@user.id).where(recipe_id: @recipe.id).find_by_id(params[:id])
+
+    @recipe_content.destroy
+    respond_to do |format|
+      format.json { head :no_content }
+    end
   end
 
   private
@@ -35,6 +44,6 @@ class RecipeContentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def recipe_contents_params
-      params.require(:recipe_content).permit(:ingredient_id)
+      params.require(:recipe_content).permit(:ingredient_id, :amount)
     end
 end
