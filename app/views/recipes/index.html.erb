@@ -16,9 +16,9 @@
       <tr>
         <td><%= recipe.name %></td>
         <td><%= recipe.user_id %></td>
-        <td><%= link_to 'Show', recipe %></td>
-        <td><%= link_to 'Edit', edit_recipe_path(recipe) %></td>
-        <td><%= link_to 'Destroy', recipe, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <td><%= link_to 'Show', user_recipe_path(@user, recipe) %></td>
+        <td><%= link_to 'Edit', edit_user_recipe_path(@user, recipe) %></td>
+        <td><%= link_to 'Destroy', user_recipe_path(@user, recipe), method: :delete, data: { confirm: 'Are you sure?' } %></td>
       </tr>
     <% end %>
   </tbody>
@@ -26,4 +26,4 @@
 
 <br>
 
-<%= link_to 'New Recipe', new_recipe_path %>
+<%= link_to 'New Recipe', new_user_recipe_path(@user) %>

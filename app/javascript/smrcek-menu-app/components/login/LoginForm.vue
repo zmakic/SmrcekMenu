@@ -67,7 +67,6 @@ export default {
   },
   watch: {
     modalShown(newVal, oldVal) {
-      console.log('modalshown', oldVal, newVal);
       if (newVal === true && newVal !== oldVal) {
         this.$refs.modal.show();
       } else if (newVal === false && newVal !== oldVal) {

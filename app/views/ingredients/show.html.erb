@@ -10,5 +10,5 @@
   <%= @ingredient.user_id %>
 </p>
 
-<%= link_to 'Edit', edit_ingredient_path(@ingredient) %> |
-<%= link_to 'Back', ingredients_path %>
+<%= link_to 'Edit', edit_user_ingredient_path(@user, @ingredient) %> |
+<%= link_to 'Back', user_ingredients_path(@user) %>

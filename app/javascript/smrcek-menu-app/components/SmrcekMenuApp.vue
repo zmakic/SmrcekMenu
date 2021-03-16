@@ -60,7 +60,8 @@
           <Recipes
               v-if="currentView === CurrentViewEnum.RECIPES"
               :recipesList="recipesList"
-              :ingredientsList="ingredientsList">
+              :ingredientsList="ingredientsList"
+              :recipeContents="recipeContents">
           </Recipes>
         </div>
       </div>
@@ -103,7 +104,8 @@ export default {
     ...mapState({
       appLoaded: 'appLoaded',
       recipesList: 'recipesList',
-      ingredientsList: 'ingredientsList'
+      ingredientsList: 'ingredientsList',
+      recipeContents: "recipeContents"
     }),
     ...mapState('LoggedInUserModule', {
       user(state: LoggedInUser) {

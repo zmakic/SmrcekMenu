@@ -34,20 +34,11 @@
                     :disabled="!selectedRecipe.id">
             Edit
           </b-button>
-          <b-list-group>
-            <b-list-group-item
-                v-for="recipeContent in selectedRecipeContents" :key="recipeContent.id"
-            >
-              <span>
-                {{ recipeContent.name }} ({{ recipeContent.amount }})
-              </span>
-              <b-button variant="danger" size="sm"
-                        @click.stop="deleteRecipeContent(recipeContent)" class="float-right ml-2"
-                        :disabled="!recipeContent.id">
-                X
-              </b-button>
-            </b-list-group-item>
-          </b-list-group>
+          <RecipeContents
+              :recipe-contents="selectedRecipeContents"
+              :ingredients-list="ingredientsList"
+              :recipe="selectedRecipe"
+              @delete-content="deleteRecipeContent($event)"/>
         </div>
       </div>
     </div>
@@ -58,14 +49,19 @@
 import RecipeForm from "./RecipeForm.vue";
 import {RecipeDto} from "../../models/backend/recipe-dto";
 import * as _ from "lodash";
-import axios from "axios";
+import {RecipeContentDto} from "smrcek-menu-app/models/backend/recipe-content-dto";
+import {IngredientDto} from "smrcek-menu-app/models/backend/ingredient-dto";
+import RecipeContents from "smrcek-menu-app/components/recipes/RecipeContents.vue";
+
 export default {
   components: {
+    RecipeContents,
     RecipeForm
   },
   props: {
     recipesList: Array,
-    ingredientsList: Array
+    ingredientsList: Array,
+    recipeContents: Object // TODO - rename somehow, because this key = recipe_id, value = recipeContents(Array) for that recipe
   },
   emits: {
   },
@@ -74,20 +70,16 @@ export default {
       newRecipeModalShown: false,
       editRecipeModalShown: false,
       internalSelectedRecipe: undefined,
-
-      recipeContents: [] // TODO - move to store, maybe
     }
   },
   computed: {
-    selectedRecipeContents() {
-      return _.map(_.filter(this.recipeContents, content => content.recipe_id == this.internalSelectedRecipe.id), recipeContent => {
-        const ingredient = _.find(this.ingredientsList, ing => ing.id === recipeContent.ingredient_id);
-        if (ingredient) {
-          recipeContent.name = ingredient.name; // TODO - is ok to mutate here ??? probably not, find a nicer solution
-        }
+    selectedRecipeContents(): RecipeContentDto[] {
+      if (!this.internalSelectedRecipe) {
+        return [];
+      }
 
-        return recipeContent;
-      });
+      const selectedContents = this.recipeContents[this.internalSelectedRecipe.id];
+      return selectedContents ? selectedContents : [];
     },
     selectedRecipe() {
       if (!this.internalSelectedRecipe) {
@@ -107,14 +99,9 @@ export default {
     setSelectedRecipe(recipe: RecipeDto) {
       this.internalSelectedRecipe = recipe;
 
-      // TODO - just hacked here for now. should move to store! but be careful about overlappinh ajax calls
-      axios.get("http://localhost:3000/users/" + 1 + '/recipes/' + recipe.id + '/recipe_contents.json').then(response => {
-        console.log('contents for recipe', recipe, response);
-
-        this.recipeContents = response.data;
-
-        console.log('content set', this.recipeContents);
-      });
+      if (recipe) {
+        this.$store.dispatch("loadRecipeContentsForRecipe", recipe);
+      }
     },
     openNewRecipeForm() {
       this.newRecipeModalShown = true;
@@ -135,11 +122,9 @@ export default {
         this.editRecipeModalShown = false;
       });
     },
-    deleteRecipeContent(recipeContent) {
-      this.$store.dispatch('deleteRecipeContent', recipeContent).then(response => {
-        this.editRecipeModalShown = false;
-      });
-    }
+
+
+
   },
 };
 

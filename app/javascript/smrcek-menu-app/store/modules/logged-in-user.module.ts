@@ -51,7 +51,9 @@ export const LoggedInUserModule: Module<LoggedInUser, AppState> = {
             console.log('LOGIN STATE', LoginStateEnum[state.loginState]);
         },
         quitLoggingIn(state: LoggedInUser) {
-            state.loginState = LoginStateEnum.NOT_LOGGED_IN;
+            if (state.loginState === LoginStateEnum.LOGIN_STARTED) {
+               state.loginState = LoginStateEnum.NOT_LOGGED_IN;
+            }
 
             console.log('LOGIN STATE', LoginStateEnum[state.loginState]);
         },

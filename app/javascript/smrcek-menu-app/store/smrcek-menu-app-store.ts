@@ -6,7 +6,8 @@ import axios from "axios";
 import {LoginStateEnum} from "../models/login/login-state-enum";
 import {RecipeDto} from "../models/backend/recipe-dto";
 import {IngredientDto} from "../models/backend/ingredient-dto";
-import _ from 'lodash'; // TODO - try to create funciton from here in mylodash
+import _ from 'lodash';
+import {RecipeContentDto} from "smrcek-menu-app/models/backend/recipe-content-dto"; // TODO - try to create funciton from here in mylodash
 
 const API_URL = "http://localhost:3000"; // TODO - put in config
 
@@ -17,7 +18,8 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
     return {
       appLoaded: false,
       recipesList: [],
-      ingredientsList: []
+      ingredientsList: [],
+      recipeContents: {}
     }
   },
   modules: {
@@ -31,13 +33,13 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
       newRecipe.creation_id = _.uniqueId('recipe');
       state.recipesList.push(newRecipe);
     },
-    updateExistingRecipe(state, { recipeToUpdateId, updatedRecipe }) {
+    updateExistingRecipe(state, { recipeToUpdateId, updatedRecipe }) { // TODO - create type for payload here ????
       const foundRecipeIndex = _.findIndex(state.recipesList, recipe => recipe.id === recipeToUpdateId);
       if (foundRecipeIndex >= 0) {
         Vue.set(state.recipesList, foundRecipeIndex, updatedRecipe);
       }
     },
-    updateNewRecipe(state, { recipeToUpdateCreationId, updatedRecipe }) {
+    updateNewRecipe(state, { recipeToUpdateCreationId, updatedRecipe }) { // TODO - create type for payload here ????
       const foundRecipeIndex = _.findIndex(state.recipesList,
               recipe => recipe.creation_id === recipeToUpdateCreationId);
       if (foundRecipeIndex >= 0) {
@@ -60,6 +62,11 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
       Vue.set(state, 'ingredientsList', newList);
     },
 
+    updateRecipeContentsForRecipe(state, { recipeContentsUpdate, recipe_id }) { // TODO - add types somehow ???
+      Vue.set(state.recipeContents, recipe_id, recipeContentsUpdate);
+      //Vue.set(state, 'recipeContents', state.recipeContents);
+      //Vue.set(state, 'recipeContents', ['+recipe_id+']', recipeContentsUpdate);
+    },
 
     clearData(state) {
       Vue.set(state, 'recipesList', []);
@@ -165,7 +172,6 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
         resolve(recipe);
       });
     },
-
     updateRecipe({commit, state}, recipe: RecipeDto): Promise<RecipeDto> {
       const userId = (state as any).LoggedInUserModule.userId;
       axios.put<RecipeDto>(API_URL + "/users/" + userId + '/recipes/' + recipe.id + '.json', {recipe: recipe})
@@ -195,10 +201,23 @@ const SmrcekMenuAppStore = new Vuex.Store<AppState>({
       });
     },
 
-    deleteRecipeContent({ commit, state }, recipeContent) {
+    loadRecipeContentsForRecipe({commit, state}, recipe: RecipeDto): Promise<RecipeContentDto[]> {
       const userId = (state as any).LoggedInUserModule.userId;
-      axios.delete(API_URL + "/users/" + userId + '/recipes/' + recipeContent.recipe_id + '/recipe_contents/' + recipeContent.id + '.json')
-          .then();
+      return axios.get<RecipeContentDto[]>(API_URL + "/users/" + userId + '/recipes/' + recipe.id + '/recipe_contents.json').then(response =>
+      {
+        this.commit("updateRecipeContentsForRecipe", { recipeContentsUpdate: response.data, recipe_id: recipe.id });
+        return response.data;
+      });
+    },
+    addRecipeContent({commit, state}, recipeContent: RecipeContentDto) {
+
+    },
+    deleteRecipeContent({ commit, state, dispatch }, { recipe, recipeContent }) {
+      const userId = (state as any).LoggedInUserModule.userId;
+      axios.delete(API_URL + "/users/" + userId + '/recipes/' + recipe.id + '/recipe_contents/' + recipeContent.id + '.json')
+          .then(result => {
+            dispatch('loadRecipeContentsForRecipe', recipe);
+          });
       // TODO - need other call for all to work
     }
   }

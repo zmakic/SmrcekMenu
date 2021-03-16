@@ -81,11 +81,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-button {
-  margin-right: 20px;
-}
 
-input {
-  border: 1px solid #333333;
-}
 </style>
